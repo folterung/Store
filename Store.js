@@ -6,17 +6,22 @@
     Store.prototype.put = put;
     Store.prototype.get = get;
     Store.prototype.remove = remove;
+    Store.prototype.save = save;
+    Store.prototype.load = load;
+    Store.prototype.clear = clear;
 
     win.Store = Store;
 
     function put(keys, value) {
         if(value === undefined) {
             _state.call(this, keys);
-        } else if(value.length && typeof value === 'object') {
-            var keys = _flattenKeys(keys);
+        } else if(_isArray(keys) && _isArray(value)) {
+            if(typeof keys === 'string') {
+                keys = _flattenKeys(keys);
+            }
 
             for(var i = 0; i < value.length; i++) {
-                this.put(keys.slice(0, i+1), value[i]);
+                this.put(keys[i], value[i]);
             }
         } else {
             var keys = _flattenKeys(keys);
@@ -28,7 +33,11 @@
         if(keys === undefined) { return this; }
 
         var keys = _flattenKeys(keys);
-        return _find.call(this, keys)[keys.slice(-1)];
+        var parentObj = _find.call(this, keys);
+
+        if(parentObj === undefined) { return; }
+
+        return parentObj[keys.slice(-1)];
     }
 
     function remove(keys) {
@@ -36,11 +45,26 @@
         delete _find.call(this, keys)[keys.slice(-1)];
     }
 
+    function save(saveKey) {
+        win.localStorage.setItem(saveKey, JSON.stringify(this));
+    }
+
+    function load(saveKey) {
+        _state.call(this, JSON.parse(win.localStorage.getItem(saveKey)));
+        return this;
+    }
+
+    function clear(saveKey) {
+        win.localStorage.removeItem(saveKey);
+    }
+
     function _flattenKeys(keys) {
         if(typeof keys === 'string') {
             return keys.split('.');
         } else if(keys.length) {
             return keys;
+        } else {
+            return [keys];
         }
     }
 
@@ -49,6 +73,7 @@
 
         for(var i = 0; i < array.length; i++) {
             if(i+1 === array.length) { break; }
+
             if(put && value[array[i]] === undefined) {
                 value[array[i]] = {};
             }
@@ -63,5 +88,9 @@
         for(var prop in obj) {
             this[prop] = obj[prop];
         }
+    }
+
+    function _isArray(value) {
+        return (value.length && typeof value === 'object');
     }
 })(window);

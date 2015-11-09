@@ -2,9 +2,158 @@
     'use strict';
 
     angular.module('store.module', [])
-        .provider('Store', function() {
-            this.$get = [function() {
-                return new Store();
+        .provider('Store', [function() {
+            var put = Store.prototype.put;
+            var get = Store.prototype.get;
+            var remove = Store.prototype.remove;
+            var api = {};
+            var METHODS = {
+                GET: 'GET',
+                PUT: 'PUT',
+                REMOVE: 'DELETE'
+            };
+
+            this.setApi = setApi;
+            this.$get = ['$http', '$q', function($http, $q) {
+                function StoreService() {}
+
+                StoreService.prototype = Store.prototype;
+                StoreService.prototype.put = putOverload;
+                StoreService.prototype.get = getOverload;
+                StoreService.prototype.remove = removeOverload;
+                StoreService.prototype.setApi = setApi;
+
+                return new StoreService();
+
+                function putOverload(keys, value, saveToServer, config) {
+                    var context = this,
+                        defer = $q.defer(),
+                        apiInfo = (saveToServer === true) ? _getApi(keys, METHODS.PUT) : false;
+
+                    if(apiInfo) {
+                        _makeRequest(apiInfo, value, config).then(function onSuccess(response) {
+                            put.call(context, keys, value);
+                            defer.resolve(response);
+                        }, function onError(error) {
+                            defer.resolve(error);
+                        });
+
+                    } else {
+                        put.call(context, keys, value);
+                        defer.resolve(get.call(context, keys));
+                    }
+
+                    return defer.promise;
+                }
+
+                function getOverload(keys, saveToServer, config) {
+                    var context = this,
+                        defer = $q.defer(),
+                        apiInfo = (saveToServer === true) ? _getApi(keys, METHODS.GET) : false;
+
+                    if(apiInfo) {
+                        _makeRequest(apiInfo, false, config).then(function onSuccess(response) {
+                            put.call(context, keys, response.data);
+                            defer.resolve(response.data);
+                        }, function onError() {
+                            defer.resolve(error);
+                        });
+                    } else {
+                        defer.resolve(get.call(context, keys));
+                    }
+
+                    return defer.promise;
+                }
+
+                function removeOverload(keys, saveToServer) {
+                    var context = this,
+                        defer = $q.defer(),
+                        apiInfo = (saveToServer === true) ? _getApi(keys, METHODS.REMOVE) : false;
+
+                    if(apiInfo) {
+                        _makeRequest(apiInfo).then(function onSuccess(response) {
+                            remove.call(context, keys);
+                            defer.resolve(response);
+                        },function onError(error) {
+                            defer.reject(error);
+                        });
+
+                    } else {
+                        remove.call(context, keys);
+                        defer.resolve(context);
+                    }
+
+                    return defer.promise;
+                }
+
+                function _makeRequest(api, value, config) {
+                    console.log(api);
+                    var httpConfig = {
+                            headers: api.headers
+                        },
+                        httpUrl;
+
+                    httpUrl = _substituteParams(api, config);
+
+                    if(value) {
+                        return $http[api.method.toLowerCase()](httpUrl, value, httpConfig);
+                    } else {
+                        return $http[api.method.toLowerCase()](httpUrl, httpConfig);
+                    }
+                }
+
+                function _substituteParams(api, params) {
+                    var tempUrl = api.url;
+
+                    for(var prop in params) {
+                        tempUrl = _replaceParams(tempUrl, prop, params[prop]);
+                    }
+
+                    return tempUrl;
+
+                    function _replaceParams(str, param, value) {
+                        var matchString = '\\{'+param+'\\}';
+                        var regex = new RegExp(matchString, 'g');
+
+                        str = str.replace(regex, value);
+
+                        return str;
+                    }
+                }
             }];
-        });
+
+            function setApi(keys, url, method, headers) {
+                var saveKey = '';
+
+                if(typeof method !== 'string' && headers === undefined) {
+                    if(method && headers === undefined) { headers = method; }
+
+                    for(var method in METHODS) {
+                        saveKey = keys + '.' + METHODS[method].toLowerCase();
+
+                        put.call(api, saveKey, {
+                            url: url,
+                            method: METHODS[method],
+                            headers: headers
+                        });
+                    }
+                } else {
+                    saveKey = keys + '.' + method.toLowerCase();
+
+                    put.call(api, saveKey, {
+                        url: url,
+                        method: method.toLowerCase(),
+                        headers: headers
+                    });
+                }
+
+                return api;
+            }
+
+            function _getApi(key, method) {
+                var getKey = key + '.' + method.toLowerCase();
+
+                return get.call(api, getKey);
+            }
+        }]);
 })();

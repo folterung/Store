@@ -1,63 +1,150 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app="test.store.app">
 <head>
     <meta charset="UTF-8">
     <title></title>
 </head>
-<body>
+<body ng-controller="MainController as main">
+    <h1 ng-bind="::main.title"></h1>
 
+    <script type="text/javascript" src="bower_components/angular/angular.min.js"></script>
     <script type="text/javascript" src="Store.js"></script>
+    <script type="text/javascript" src="StoreProvider.js"></script>
     <script type="text/javascript">
-        var apples = new Store('apples');
-        var oranges = new Store('oranges');
 
-        apples.put('red.delicious', {
-            width: '300mm',
-            height: '500mm'
-        });
+        angular.module('test.store.app', ['store.module'])
+                .config(function(StoreProvider) {
+                    console.log(StoreProvider);
+                    console.log('setApi return value: ', StoreProvider.setApi('model.data.title', '{param1}/{param2}/{param3}'));
+                })
+                .controller('MainController', ['Store', function(Store) {
+                    var main = this;
 
-        oranges.put({
-            naval: {
-                width: '340mm',
-                height: '550mm'
-            },
-            mandarin: {
-                width: '235mm',
-                height: '600mm'
-            }
-        });
+                    main.title = 'Main!';
 
-        console.log(apples.get());
-        console.log(oranges.get());
+//                    Store.put('model.data.title', {
+//                        title: main.title,
+//                        name: 'Name for model data'
+//                    }, true, { id: '1' }).then(function(response) {
+//                        console.log(response);
+//                    });
 
-        oranges.remove('naval');
+//                    Store.get('model.data.title', true, [
+//                        'api',
+//                        'title',
+//                        '0.json'
+//                    ]).then(function(response) {
+//                        console.log(response);
+//
+//                        Store.get('model', false).then(function(response) {
+//                            console.log(response);
+//                        });
+//                    });
 
-        console.log(apples.get('red.delicious.height'));
-        console.log(oranges.get());
+                    Store.get('model.data.title', true, {
+                        param1: 'api',
+                        param2: 'title',
+                        param3: '0.json'
+                    }).then(function(response) {
+                        console.log(response);
 
-        oranges.remove('mandarin');
+                        Store.get('model', false).then(function(response) {
+                            console.log(response);
+                        });
+                    });
 
-        console.log('Joining: ', ['test', 'child', 'child2', 'child3'].join('.'));
-        oranges.put(['test', 'child', 'child2', 'child3'], 'I am child 3');
+                    console.log('setApi return value: ', Store.setApi('model.data.title', '{param1}/{param2}/{param3}', {
+                        "cache-control": "no-cache"
+                    }));
 
-        console.log(apples.get());
-        console.log(oranges.get());
+                    Store.get('model.data.title', true, {
+                        param1: 'api',
+                        param2: 'title',
+                        param3: '0.json'
+                    }).then(function(response) {
+                        console.log(response);
 
-        var putKey = [];
-        var putVal = [];
+                        Store.get('model', false).then(function(response) {
+                            console.log(response);
+                        });
+                    });
 
-        for(var i = 0; i < 50; i++) {
-            putKey.push(i);
-            putVal.push({
-                name: 'Name ' + i
-            });
-        }
+//                    Store.remove('model.data.title', true).then(function(response) {
+//                        console.log('New data after remove: ', response);
+//                    });
+                }]);
 
-        apples.put(putKey.join('.'), putVal);
-        apples.put('0.1.2.3.4.5', {
-            value: 'Overwrote further nested objects'
-        });
-        console.log(apples.get());
+//        var apples = new Store('apples');
+//        var oranges = new Store('oranges');
+//
+//        //Test setting data in two different formats
+//        apples.put('red.delicious', {
+//            width: '300mm',
+//            height: '500mm'
+//        });
+//
+//        oranges.put({
+//            naval: {
+//                width: '340mm',
+//                height: '550mm'
+//            },
+//            mandarin: {
+//                width: '235mm',
+//                height: '600mm'
+//            }
+//        });
+//
+//        //Get store data
+//        console.log(apples.get());
+//        console.log(oranges.get());
+//
+//        //Remove naval property from oranges store
+//        oranges.remove('naval');
+//
+//        //Get store data
+//        console.log(apples.get('red.delicious.height'));
+//        console.log(oranges.get());
+//
+//        //Remove mandarin property from oranges store
+//        oranges.remove('mandarin');
+//
+//        //Test adding array of nested properties
+//        oranges.put(['test', 'child', 'child2', 'child3'], 'I am child 3');
+//
+//        //Get store data
+//        console.log(apples.get());
+//        console.log(oranges.get());
+//
+//        var putKey = [];
+//        var putVal = [];
+//
+//        for(var i = 0; i < 50; i++) {
+//            putKey.push(i);
+//            putVal.push({
+//                name: 'Name ' + i
+//            });
+//        }
+//
+//        //Test adding to store using two arrays to set data
+//        apples.put(putKey.join('.'), putVal);
+//        console.log(apples.get(putKey.join('.')));
+//        apples.put(putKey.slice(1), putVal.slice(1));
+//        console.log(apples.get());
+//        apples.put(putKey.join('.'), 'Super nested!');
+//
+//        apples.put(['checking.nesting', 'nice.cool.stuff', 'answer.to.the.universe'], ['Smile', { name: 'So random' }, 42]);
+//
+//        //Test saving state to local storage
+//        apples.save('AppleState');
+//        apples.put('0.1.2.3.4.5', {
+//            value: 'Overwrote further nested objects'
+//        });
+//        console.log(apples.get());
+//        apples.load('AppleState');
+//        console.log('State restored');
+//        console.log(apples.get());
+//        console.log(apples.get(putKey.join('.')));
+//        apples.clear('AppleState');
     </script>
 </body>
 </html>
