@@ -8,8 +8,9 @@
             var remove = Store.prototype.remove;
             var api = {};
             var METHODS = {
-                GET: 'GET',
                 PUT: 'PUT',
+                POST: 'POST',
+                GET: 'GET',
                 REMOVE: 'DELETE'
             };
 
@@ -19,6 +20,7 @@
 
                 StoreService.prototype = Store.prototype;
                 StoreService.prototype.put = putOverload;
+                StoreService.prototype.post = post;
                 StoreService.prototype.get = getOverload;
                 StoreService.prototype.remove = removeOverload;
                 StoreService.prototype.setApi = setApi;
@@ -34,6 +36,27 @@
                         _makeRequest(apiInfo, value, config).then(function onSuccess(response) {
                             put.call(context, keys, value);
                             defer.resolve(response);
+                        }, function onError(error) {
+                            defer.resolve(error);
+                        });
+
+                    } else {
+                        put.call(context, keys, value);
+                        defer.resolve(get.call(context, keys));
+                    }
+
+                    return defer.promise;
+                }
+
+                function post(keys, value, saveToServer, config) {
+                    var context = this,
+                        defer = $q.defer(),
+                        apiInfo = (saveToServer === true) ? _getApi(keys, METHODS.POST) : false;
+
+                    if(apiInfo) {
+                        _makeRequest(apiInfo, value, config).then(function onSuccess() {
+                            put.call(context, keys, value);
+                            defer.resolve(get.call(context, keys));
                         }, function onError(error) {
                             defer.resolve(error);
                         });
@@ -65,13 +88,13 @@
                     return defer.promise;
                 }
 
-                function removeOverload(keys, saveToServer) {
+                function removeOverload(keys, saveToServer, config) {
                     var context = this,
                         defer = $q.defer(),
                         apiInfo = (saveToServer === true) ? _getApi(keys, METHODS.REMOVE) : false;
 
                     if(apiInfo) {
-                        _makeRequest(apiInfo).then(function onSuccess(response) {
+                        _makeRequest(apiInfo, false, config).then(function onSuccess(response) {
                             remove.call(context, keys);
                             defer.resolve(response);
                         },function onError(error) {

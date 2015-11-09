@@ -25,7 +25,7 @@
 
                     main.title = 'Main!';
 
-                    Store.put('model.data.title2', {
+                    Store.post('model.data.title2', {
                         title: main.title,
                         name: 'Name for model data'
                     }, true, {
@@ -33,7 +33,7 @@
                         param2: 'title',
                         param3: '1.json'
                     }).then(function(response) {
-                        console.log(response);
+                        console.log('Post response: ', response);
                     });
 
 //                    Store.get('model.data.title', true, [
@@ -61,7 +61,8 @@
                     });
 
                     console.log('setApi return value: ', Store.setApi('model.data.title', '{param1}/{param2}/{param3}', {
-                        "cache-control": "no-cache"
+                        "cache-control": "no-cache",
+                        "RandomHeaderProperty": "Gunner"
                     }));
 
                     Store.get('model.data.title', true, {
@@ -74,11 +75,15 @@
                         Store.get('model', false).then(function(response) {
                             console.log(response);
                         });
-                    });
 
-//                    Store.remove('model.data.title', true).then(function(response) {
-//                        console.log('New data after remove: ', response);
-//                    });
+                        Store.remove('model.data.title', false, {
+                            param1: 'api',
+                            param2: 'title',
+                            param3: '0.json'
+                        }).then(function(response) {
+                            console.log('New data after remove: ', response);
+                        });
+                    });
                 }]);
 
 //        var apples = new Store('apples');
