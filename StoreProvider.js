@@ -93,11 +93,7 @@
                         httpArgs = [];
 
                     httpArgs.push(_substituteParams(api, config));
-
-                    if(value) {
-                        httpArgs.push(value);
-                    }
-
+                    if(value) { httpArgs.push(value); }
                     httpArgs.push(httpConfig);
 
                     return $http[api.method.toLowerCase()].apply(this, httpArgs);
