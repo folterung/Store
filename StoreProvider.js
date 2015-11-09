@@ -87,19 +87,20 @@
                 }
 
                 function _makeRequest(api, value, config) {
-                    console.log(api);
                     var httpConfig = {
                             headers: api.headers
                         },
-                        httpUrl;
+                        httpArgs = [];
 
-                    httpUrl = _substituteParams(api, config);
+                    httpArgs.push(_substituteParams(api, config));
 
                     if(value) {
-                        return $http[api.method.toLowerCase()](httpUrl, value, httpConfig);
-                    } else {
-                        return $http[api.method.toLowerCase()](httpUrl, httpConfig);
+                        httpArgs.push(value);
                     }
+
+                    httpArgs.push(httpConfig);
+
+                    return $http[api.method.toLowerCase()].apply(this, httpArgs);
                 }
 
                 function _substituteParams(api, params) {

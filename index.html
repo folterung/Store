@@ -16,18 +16,25 @@
                 .config(function(StoreProvider) {
                     console.log(StoreProvider);
                     console.log('setApi return value: ', StoreProvider.setApi('model.data.title', '{param1}/{param2}/{param3}'));
+                    StoreProvider.setApi('model.data.title2', '{param1}/{param2}/{param3}', {
+                        "cache-control": "no-cache"
+                    });
                 })
                 .controller('MainController', ['Store', function(Store) {
                     var main = this;
 
                     main.title = 'Main!';
 
-//                    Store.put('model.data.title', {
-//                        title: main.title,
-//                        name: 'Name for model data'
-//                    }, true, { id: '1' }).then(function(response) {
-//                        console.log(response);
-//                    });
+                    Store.put('model.data.title2', {
+                        title: main.title,
+                        name: 'Name for model data'
+                    }, true, {
+                        param1: 'api',
+                        param2: 'title',
+                        param3: '1.json'
+                    }).then(function(response) {
+                        console.log(response);
+                    });
 
 //                    Store.get('model.data.title', true, [
 //                        'api',
