@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title></title>
+</head>
+<body>
+
+    <script type="text/javascript" src="Store.js"></script>
+    <script type="text/javascript">
+        var apples = new Store('apples');
+        var oranges = new Store('oranges');
+
+        apples.put('red.delicious', {
+            width: '300mm',
+            height: '500mm'
+        });
+
+        oranges.put({
+            naval: {
+                width: '340mm',
+                height: '550mm'
+            },
+            mandarin: {
+                width: '235mm',
+                height: '600mm'
+            }
+        });
+
+        console.log(apples.get());
+        console.log(oranges.get());
+
+        oranges.remove('naval');
+
+        console.log(apples.get('red.delicious.height'));
+        console.log(oranges.get());
+
+        oranges.remove('mandarin');
+
+        console.log('Joining: ', ['test', 'child', 'child2', 'child3'].join('.'));
+        oranges.put(['test', 'child', 'child2', 'child3'], 'I am child 3');
+
+        console.log(apples.get());
+        console.log(oranges.get());
+
+        var putKey = [];
+        var putVal = [];
+
+        for(var i = 0; i < 50; i++) {
+            putKey.push(i);
+            putVal.push({
+                name: 'Name ' + i
+            });
+        }
+
+        apples.put(putKey.join('.'), putVal);
+        apples.put('0.1.2.3.4.5', {
+            value: 'Overwrote further nested objects'
+        });
+        console.log(apples.get());
+    </script>
+</body>
+</html>
