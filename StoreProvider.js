@@ -7,6 +7,7 @@
             var get = Store.prototype.get;
             var remove = Store.prototype.remove;
             var api = {};
+            var baseUrl = '';
             var METHODS = {
                 PUT: 'PUT',
                 POST: 'POST',
@@ -15,6 +16,7 @@
             };
 
             this.setApi = setApi;
+            this.setBaseUrl = setBaseUrl;
             this.$get = ['$http', '$q', function($http, $q) {
                 function StoreService() {}
 
@@ -24,6 +26,8 @@
                 StoreService.prototype.get = getOverload;
                 StoreService.prototype.remove = removeOverload;
                 StoreService.prototype.setApi = setApi;
+                StoreService.prototype.wipe = wipe;
+                StoreService.prototype.setBaseUrl = setBaseUrl;
 
                 return StoreService;
 
@@ -109,6 +113,14 @@
                     return defer.promise;
                 }
 
+                function wipe() {
+                    var context = this;
+
+                    for(var prop in context) {
+                        delete context[prop];
+                    }
+                }
+
                 function _makeRequest(api, value, config) {
                     var httpConfig = {
                             headers: api.headers
@@ -152,7 +164,7 @@
                         saveKey = keys + '.' + METHODS[method].toLowerCase();
 
                         put.call(api, saveKey, {
-                            url: url,
+                            url: _buildUrl(url),
                             method: METHODS[method],
                             headers: headers
                         });
@@ -161,17 +173,25 @@
                     saveKey = keys + '.' + method.toLowerCase();
 
                     put.call(api, saveKey, {
-                        url: url,
+                        url: _buildUrl(url),
                         method: method.toLowerCase(),
                         headers: headers
                     });
                 }
             }
 
+            function setBaseUrl(newBaseUrl) {
+                baseUrl = newBaseUrl;
+            }
+
             function _getApi(key, method) {
                 var getKey = key + '.' + method.toLowerCase();
 
                 return get.call(api, getKey);
+            }
+
+            function _buildUrl(url) {
+                return (url.charAt(0) === '/') ? (baseUrl + url) : url;
             }
         }]);
 })();
