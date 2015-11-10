@@ -15,26 +15,17 @@
 
         angular.module('test.store.app', ['store.module'])
                 .config(function(StoreProvider) {
-                    console.log(StoreProvider);
-                    console.log('setApi return value: ', StoreProvider.setApi('model.data.title', '{param1}/{param2}/{param3}'));
+                    StoreProvider.setApi('model.data.title', '{param1}/{param2}/{param3}');
                     StoreProvider.setApi('model.data.title2', '{param1}/{param2}/{param3}', {
                         "cache-control": "no-cache"
                     });
                 })
                 .factory('MainService', ['$q', 'Store', function($q, Store) {
                     var store = new Store();
-                    var defaultHeaders = {
-                        "cache-control": "no-cache"
-                    };
-                    var titleObj = {
-                        id: 0
-                    };
-                    var newTitleObj = {
-                        name: 'Squirrel Title'
-                    };
-                    var bodyObj = {
-                        id: 'random_id'
-                    };
+                    var defaultHeaders = { "cache-control": "no-cache" };
+                    var titleObj = { id: 0 };
+                    var newTitleObj = { name: 'Squirrel Title' };
+                    var bodyObj = { id: 'random_id' };
 
                     store.setApi('main.title', 'api/title/{id}.json', 'GET', defaultHeaders);
                     store.setApi('main.body', 'api/body/{id}.json', 'GET', defaultHeaders);
@@ -69,10 +60,22 @@
                 }])
                 .controller('MainController', ['$timeout', 'MainService', function($timeout, MainService) {
                     var main = this;
+                    var STORE_SAVE_NAME = 'MainData';
+                    var cachedData = MainService.store.load(STORE_SAVE_NAME);
 
-                    MainService.getAllData().then(function() {
-                        init();
-                    });
+                    if(cachedData) {
+                        main.title = cachedData.main.title.text;
+                        main.body = cachedData.main.body.text;
+                    } else {
+                        MainService.getAllData().then(function() {
+                            init();
+                            MainService.store.save(STORE_SAVE_NAME);
+                        });
+                    }
+
+                    setTimeout(function() {
+                        MainService.store.clear(STORE_SAVE_NAME);
+                    }, 2000);
 
                     function init() {
                         main.title = MainService.store.main.title.text;

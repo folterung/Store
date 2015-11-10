@@ -6,9 +6,12 @@
     Store.prototype.put = put;
     Store.prototype.get = get;
     Store.prototype.remove = remove;
-    Store.prototype.save = save;
-    Store.prototype.load = load;
-    Store.prototype.clear = clear;
+
+    if(win.localStorage) {
+        Store.prototype.save = save;
+        Store.prototype.load = load;
+        Store.prototype.clear = clear;
+    }
 
     win.Store = Store;
 
@@ -50,8 +53,14 @@
     }
 
     function load(saveKey) {
-        _state.call(this, JSON.parse(win.localStorage.getItem(saveKey)));
-        return this;
+        var cachedData = JSON.parse(win.localStorage.getItem(saveKey));
+
+        if(cachedData) {
+            _state.call(this, cachedData);
+            return this;
+        }
+
+        return undefined;
     }
 
     function clear(saveKey) {

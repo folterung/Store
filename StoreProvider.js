@@ -166,8 +166,6 @@
                         headers: headers
                     });
                 }
-
-                return api;
             }
 
             function _getApi(key, method) {
