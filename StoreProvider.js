@@ -25,19 +25,19 @@
                 StoreService.prototype.remove = removeOverload;
                 StoreService.prototype.setApi = setApi;
 
-                return new StoreService();
+                return StoreService;
 
-                function putOverload(keys, value, saveToServer, config) {
+                function putOverload(keys, value, includeServer, config) {
                     var context = this,
                         defer = $q.defer(),
-                        apiInfo = (saveToServer === true) ? _getApi(keys, METHODS.PUT) : false;
+                        apiInfo = (includeServer === true) ? _getApi(keys, METHODS.PUT) : false;
 
                     if(apiInfo) {
                         _makeRequest(apiInfo, value, config).then(function onSuccess(response) {
                             put.call(context, keys, value);
-                            defer.resolve(response);
+                            defer.resolve(response.data);
                         }, function onError(error) {
-                            defer.resolve(error);
+                            defer.reject(error);
                         });
 
                     } else {
@@ -48,17 +48,17 @@
                     return defer.promise;
                 }
 
-                function post(keys, value, saveToServer, config) {
+                function post(keys, value, includeServer, config) {
                     var context = this,
                         defer = $q.defer(),
-                        apiInfo = (saveToServer === true) ? _getApi(keys, METHODS.POST) : false;
+                        apiInfo = (includeServer === true) ? _getApi(keys, METHODS.POST) : false;
 
                     if(apiInfo) {
                         _makeRequest(apiInfo, value, config).then(function onSuccess() {
                             put.call(context, keys, value);
                             defer.resolve(get.call(context, keys));
                         }, function onError(error) {
-                            defer.resolve(error);
+                            defer.reject(error);
                         });
 
                     } else {
@@ -69,17 +69,17 @@
                     return defer.promise;
                 }
 
-                function getOverload(keys, saveToServer, config) {
+                function getOverload(keys, includeServer, config) {
                     var context = this,
                         defer = $q.defer(),
-                        apiInfo = (saveToServer === true) ? _getApi(keys, METHODS.GET) : false;
+                        apiInfo = (includeServer === true) ? _getApi(keys, METHODS.GET) : false;
 
                     if(apiInfo) {
                         _makeRequest(apiInfo, false, config).then(function onSuccess(response) {
                             put.call(context, keys, response.data);
                             defer.resolve(response.data);
-                        }, function onError() {
-                            defer.resolve(error);
+                        }, function onError(error) {
+                            defer.reject(error);
                         });
                     } else {
                         defer.resolve(get.call(context, keys));
@@ -88,10 +88,10 @@
                     return defer.promise;
                 }
 
-                function removeOverload(keys, saveToServer, config) {
+                function removeOverload(keys, includeServer, config) {
                     var context = this,
                         defer = $q.defer(),
-                        apiInfo = (saveToServer === true) ? _getApi(keys, METHODS.REMOVE) : false;
+                        apiInfo = (includeServer === true) ? _getApi(keys, METHODS.REMOVE) : false;
 
                     if(apiInfo) {
                         _makeRequest(apiInfo, false, config).then(function onSuccess(response) {

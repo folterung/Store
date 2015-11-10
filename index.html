@@ -5,7 +5,8 @@
     <title></title>
 </head>
 <body ng-controller="MainController as main">
-    <h1 ng-bind="::main.title"></h1>
+    <h1 ng-bind="main.title"></h1>
+    <p ng-bind="main.body"></p>
 
     <script type="text/javascript" src="bower_components/angular/angular.min.js"></script>
     <script type="text/javascript" src="Store.js"></script>
@@ -20,70 +21,101 @@
                         "cache-control": "no-cache"
                     });
                 })
-                .controller('MainController', ['Store', function(Store) {
+                .factory('MainService', ['$q', 'Store', function($q, Store) {
+                    var store = new Store();
+                    var defaultHeaders = {
+                        "cache-control": "no-cache"
+                    };
+                    var titleObj = {
+                        id: 0
+                    };
+                    var newTitleObj = {
+                        name: 'Squirrel Title'
+                    };
+                    var bodyObj = {
+                        id: 'random_id'
+                    };
+
+                    store.setApi('main.title', 'api/title/{id}.json', 'GET', defaultHeaders);
+                    store.setApi('main.body', 'api/body/{id}.json', 'GET', defaultHeaders);
+                    store.setApi('main.title', 'api/title/{id}', 'POST', defaultHeaders);
+
+                    return {
+                        store: store,
+                        getAllData: getAllData,
+                        getTitle: getTitle,
+                        getBody: getBody,
+                        updateTitle: updateTitle
+                    };
+
+                    function getAllData() {
+                        return $q.all([
+                            getTitle(),
+                            getBody()
+                        ]);
+                    }
+
+                    function getTitle() {
+                        return store.get('main.title', true, titleObj);
+                    }
+
+                    function updateTitle() {
+                        return store.post('main.title', newTitleObj, true, titleObj);
+                    }
+
+                    function getBody() {
+                        return store.get('main.body', true, bodyObj);
+                    }
+                }])
+                .controller('MainController', ['$timeout', 'MainService', function($timeout, MainService) {
                     var main = this;
 
-                    main.title = 'Main!';
-
-                    Store.post('model.data.title2', {
-                        title: main.title,
-                        name: 'Name for model data'
-                    }, true, {
-                        param1: 'api',
-                        param2: 'title',
-                        param3: '1.json'
-                    }).then(function(response) {
-                        console.log('Post response: ', response);
+                    MainService.getAllData().then(function() {
+                        init();
                     });
 
-//                    Store.get('model.data.title', true, [
-//                        'api',
-//                        'title',
-//                        '0.json'
-//                    ]).then(function(response) {
-//                        console.log(response);
+                    function init() {
+                        main.title = MainService.store.main.title.text;
+                        main.body = MainService.store.main.body.text;
+                    }
+//                    MainService.getAllData().then(function onSuccess() {
 //
-//                        Store.get('model', false).then(function(response) {
-//                            console.log(response);
-//                        });
+//                    }, function onError(error) {
+//                        console.log('Get all data error: ', error);
 //                    });
 
-                    Store.get('model.data.title', true, {
-                        param1: 'api',
-                        param2: 'title',
-                        param3: '0.json'
-                    }).then(function(response) {
-                        console.log(response);
+//                    MainService.updateTitle().then(function onSuccess(response) {
+//                        console.log('Update title response: ', response);
+//                    },  function onError(error) {
+//                        console.log('Update error: ', error);
+//                    });
+//
+//                    MainService.getAllData().then(function onSuccess() {
+//                        MainService.store.get('main.title', false).then(function(title) {
+//                            main.title = title.text;
+//                        });
+//
+//                        MainService.store.get('main.body', false).then(function(body) {
+//                            main.body = body.text;
+//                        });
+//
+//                        console.log(MainService);
+//                    }, function onError(error) {
+//                        console.log('Get all data error: ', error);
+//                    });
 
-                        Store.get('model', false).then(function(response) {
-                            console.log(response);
-                        });
-                    });
-
-                    console.log('setApi return value: ', Store.setApi('model.data.title', '{param1}/{param2}/{param3}', {
-                        "cache-control": "no-cache",
-                        "RandomHeaderProperty": "Gunner"
-                    }));
-
-                    Store.get('model.data.title', true, {
-                        param1: 'api',
-                        param2: 'title',
-                        param3: '0.json'
-                    }).then(function(response) {
-                        console.log(response);
-
-                        Store.get('model', false).then(function(response) {
-                            console.log(response);
-                        });
-
-                        Store.remove('model.data.title', false, {
-                            param1: 'api',
-                            param2: 'title',
-                            param3: '0.json'
-                        }).then(function(response) {
-                            console.log('New data after remove: ', response);
-                        });
-                    });
+//                    MainService.getTitle().then(function onSuccess(response) {
+//                        console.log('Response from get title: ', response);
+//                        main.title = response.title;
+//                    }, function onError(error) {
+//                        console.log('titles error: ', error);
+//                    });
+//
+//                    MainService.getBody().then(function onSuccess(response) {
+//                        main.body = response.body;
+//                    }, function onError(error) {
+//                        console.log('body error: ', error);
+//                    });
                 }]);
 
 //        var apples = new Store('apples');
