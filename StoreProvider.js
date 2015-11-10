@@ -54,9 +54,9 @@
                         apiInfo = (includeServer === true) ? _getApi(keys, METHODS.POST) : false;
 
                     if(apiInfo) {
-                        _makeRequest(apiInfo, value, config).then(function onSuccess() {
-                            put.call(context, keys, value);
-                            defer.resolve(get.call(context, keys));
+                        _makeRequest(apiInfo, value, config).then(function onSuccess(response) {
+                            put.call(context, keys, response.data);
+                            defer.resolve(response.data);
                         }, function onError(error) {
                             defer.reject(error);
                         });
