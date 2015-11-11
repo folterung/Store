@@ -15,7 +15,7 @@
                 REMOVE: 'DELETE'
             };
 
-            this.setApi = setApi;
+            this.set = set;
             this.setBaseUrl = setBaseUrl;
             this.$get = ['$http', '$q', function($http, $q) {
                 function StoreService() {}
@@ -25,95 +25,93 @@
                 StoreService.prototype.post = post;
                 StoreService.prototype.get = getOverload;
                 StoreService.prototype.remove = removeOverload;
-                StoreService.prototype.setApi = setApi;
-                StoreService.prototype.wipe = wipe;
+                StoreService.prototype.set = set;
+                StoreService.prototype.wipe = empty;
                 StoreService.prototype.setBaseUrl = setBaseUrl;
 
                 return StoreService;
 
-                function putOverload(keys, value, includeServer, config) {
+                function putOverload(keys, value, config) {
                     var context = this,
-                        defer = $q.defer(),
-                        apiInfo = (includeServer === true) ? _getApi(keys, METHODS.PUT) : false;
+                        apiInfo = _get(keys, METHODS.PUT);
 
-                    if(apiInfo) {
+                    if(apiInfo && apiInfo.url) {
+                        var defer = $q.defer();
+
                         _makeRequest(apiInfo, value, config).then(function onSuccess(response) {
-                            put.call(context, keys, value);
+                            if(apiInfo.store) { put.call(context, keys, value); }
                             defer.resolve(response.data);
                         }, function onError(error) {
                             defer.reject(error);
                         });
 
+                        return defer.promise;
                     } else {
-                        put.call(context, keys, value);
-                        defer.resolve(get.call(context, keys));
+                        return put.call(context, keys, value);
                     }
-
-                    return defer.promise;
                 }
 
-                function post(keys, value, includeServer, config) {
+                function post(keys, value, config) {
                     var context = this,
-                        defer = $q.defer(),
-                        apiInfo = (includeServer === true) ? _getApi(keys, METHODS.POST) : false;
+                        apiInfo = _get(keys, METHODS.POST);
 
-                    if(apiInfo) {
+                    if(apiInfo && apiInfo.url) {
+                        var defer = $q.defer();
+
                         _makeRequest(apiInfo, value, config).then(function onSuccess(response) {
-                            put.call(context, keys, response.data);
+                            if(apiInfo.store) { put.call(context, keys, response.data); }
                             defer.resolve(response.data);
                         }, function onError(error) {
                             defer.reject(error);
                         });
 
+                        return defer.promise;
                     } else {
-                        put.call(context, keys, value);
-                        defer.resolve(get.call(context, keys));
+                        return put.call(context, keys, value);
                     }
-
-                    return defer.promise;
                 }
 
-                function getOverload(keys, includeServer, config) {
+                function getOverload(keys, config) {
                     var context = this,
-                        defer = $q.defer(),
-                        apiInfo = (includeServer === true) ? _getApi(keys, METHODS.GET) : false;
+                        apiInfo = _get(keys, METHODS.GET);
 
-                    if(apiInfo) {
+                    if(apiInfo && apiInfo.url) {
+                        var defer = $q.defer();
+
                         _makeRequest(apiInfo, false, config).then(function onSuccess(response) {
-                            put.call(context, keys, response.data);
+                            if(apiInfo.store) { put.call(context, keys, response.data); }
                             defer.resolve(response.data);
                         }, function onError(error) {
                             defer.reject(error);
                         });
-                    } else {
-                        defer.resolve(get.call(context, keys));
-                    }
 
-                    return defer.promise;
+                        return defer.promise;
+                    } else {
+                        return get.call(context, keys);
+                    }
                 }
 
-                function removeOverload(keys, includeServer, config) {
+                function removeOverload(keys, config) {
                     var context = this,
-                        defer = $q.defer(),
-                        apiInfo = (includeServer === true) ? _getApi(keys, METHODS.REMOVE) : false;
+                        apiInfo = _get(keys, METHODS.REMOVE);
 
-                    if(apiInfo) {
+                    if(apiInfo && apiInfo.url) {
+                        var defer = $q.defer();
+
                         _makeRequest(apiInfo, false, config).then(function onSuccess(response) {
-                            remove.call(context, keys);
+                            if(apiInfo.store) { remove.call(context, keys); }
                             defer.resolve(response);
                         },function onError(error) {
                             defer.reject(error);
                         });
 
+                        return defer.promise;
                     } else {
-                        remove.call(context, keys);
-                        defer.resolve(context);
+                        return remove.call(context, keys);
                     }
-
-                    return defer.promise;
                 }
 
-                function wipe() {
+                function empty() {
                     var context = this;
 
                     for(var prop in context) {
@@ -154,28 +152,35 @@
                 }
             }];
 
-            function setApi(keys, url, method, headers) {
+            function set(mapKey, config) {
                 var saveKey = '';
 
-                if(typeof method !== 'string' && headers === undefined) {
-                    if(method && headers === undefined) { headers = method; }
-
+                if(_isUndefined(config) || _isUndefined(config.method)) {
                     for(var method in METHODS) {
-                        saveKey = keys + '.' + METHODS[method].toLowerCase();
+                        var saveConfig = {};
+                        var methodName = METHODS[method].toLowerCase();
 
-                        put.call(api, saveKey, {
-                            url: _buildUrl(url),
-                            method: METHODS[method],
-                            headers: headers
-                        });
+                        saveKey = mapKey + '.' + methodName;
+                        saveConfig.method = methodName;
+
+                        if(_isUndefined(config) || _isUndefined(config.url)) {
+                            saveConfig.store = true;
+                        } else {
+                            saveConfig.url = _buildUrl(config.url);
+                            saveConfig.headers = config.headers;
+                            saveConfig.store = config.store;
+                        }
+
+                        put.call(api, saveKey, saveConfig);
                     }
                 } else {
-                    saveKey = keys + '.' + method.toLowerCase();
+                    saveKey = mapKey + '.' + config.method.toLowerCase();
 
                     put.call(api, saveKey, {
-                        url: _buildUrl(url),
-                        method: method.toLowerCase(),
-                        headers: headers
+                        url: _buildUrl(config.url),
+                        method: config.method.toLowerCase(),
+                        headers: config.headers,
+                        store: config.store
                     });
                 }
             }
@@ -184,7 +189,7 @@
                 baseUrl = newBaseUrl;
             }
 
-            function _getApi(key, method) {
+            function _get(key, method) {
                 var getKey = key + '.' + method.toLowerCase();
 
                 return get.call(api, getKey);
@@ -192,6 +197,10 @@
 
             function _buildUrl(url) {
                 return (url.charAt(0) === '/') ? (baseUrl + url) : url;
+            }
+
+            function _isUndefined(value) {
+                return value === undefined;
             }
         }]);
 })();

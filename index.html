@@ -7,6 +7,8 @@
 <body ng-controller="MainController as main">
     <h1 ng-bind="main.title"></h1>
     <p ng-bind="main.body"></p>
+    <hr/>
+    <p ng-bind="main.subtext"></p>
 
     <script type="text/javascript" src="bower_components/angular/angular.min.js"></script>
     <script type="text/javascript" src="Store.js"></script>
@@ -15,28 +17,36 @@
 
         angular.module('test.store.app', ['store.module'])
                 .config(function(StoreProvider) {
-                    StoreProvider.setApi('model.data.title', '{param1}/{param2}/{param3}');
-                    StoreProvider.setApi('model.data.title2', '{param1}/{param2}/{param3}', {
-                        "cache-control": "no-cache"
-                    });
+
                 })
                 .factory('MainService', ['$q', 'Store', function($q, Store) {
                     var store = new Store();
-                    var defaultHeaders = { "cache-control": "no-cache" };
-                    var titleObj = { id: 0 };
-                    var newTitleObj = { name: 'Squirrel Title' };
-                    var bodyObj = { id: 'random_id' };
+                    var defaultHeaders = {
+                        "cache-control": "no-cache"
+                    };
 
-                    store.setApi('main.title', 'api/title/{id}.json', 'GET', defaultHeaders);
-                    store.setApi('main.body', 'api/body/{id}.json', 'GET', defaultHeaders);
-                    store.setApi('main.title', 'api/title/{id}', 'POST', defaultHeaders);
+                    store.setBaseUrl('api');
+
+                    store.set('title', {
+                        url: '/title/{id}.json',
+                        headers: defaultHeaders,
+                        store: true
+                    });
+
+                    store.set('body', {
+                        url: '/body/{id}.json',
+                        headers: defaultHeaders
+                    });
+
+                    store.set('subtext');
 
                     return {
                         store: store,
                         getAllData: getAllData,
                         getTitle: getTitle,
                         getBody: getBody,
-                        updateTitle: updateTitle
+                        updateTitle: updateTitle,
+                        subtext: subtext
                     };
 
                     function getAllData() {
@@ -47,151 +57,44 @@
                     }
 
                     function getTitle() {
-                        return store.get('main.title', true, titleObj);
+                        return store.get('title', {
+                            id: 0
+                        });
                     }
 
                     function updateTitle() {
-                        return store.post('main.title', newTitleObj, true, titleObj);
+                        return store.post('title', {
+                            name: 'Squirrel Title'
+                        }, {
+                            id: 1
+                        });
                     }
 
                     function getBody() {
-                        return store.get('main.body', true, bodyObj);
+                        return store.get('body', {
+                            id: 'random_id'
+                        });
+                    }
+
+                    function subtext(value) {
+                        return store.put('subtext', value);
                     }
                 }])
                 .controller('MainController', ['$timeout', 'MainService', function($timeout, MainService) {
                     var main = this;
-                    var STORE_SAVE_NAME = 'MainData';
-                    var cachedData = MainService.store.load(STORE_SAVE_NAME);
 
-                    if(cachedData) {
-                        main.title = cachedData.main.title.text;
-                        main.body = cachedData.main.body.text;
-                    } else {
-                        MainService.getAllData().then(function() {
-                            init();
-                            MainService.store.save(STORE_SAVE_NAME);
+                    MainService.getAllData().then(function(response) {
+                        main.body = response[1].text;
+                        main.title = MainService.store.title.text;
+
+                        MainService.updateTitle().then(function() {
+                            main.title = MainService.store.title.text;
+                            console.log('MainService after update: ', MainService.store);
                         });
-                    }
+                    });
 
-                    setTimeout(function() {
-                        MainService.store.clear(STORE_SAVE_NAME);
-                    }, 2000);
-
-                    function init() {
-                        main.title = MainService.store.main.title.text;
-                        main.body = MainService.store.main.body.text;
-                    }
-//                    MainService.getAllData().then(function onSuccess() {
-//
-//                    }, function onError(error) {
-//                        console.log('Get all data error: ', error);
-//                    });
-
-//                    MainService.updateTitle().then(function onSuccess(response) {
-//                        console.log('Update title response: ', response);
-//                    },  function onError(error) {
-//                        console.log('Update error: ', error);
-//                    });
-//
-//                    MainService.getAllData().then(function onSuccess() {
-//                        MainService.store.get('main.title', false).then(function(title) {
-//                            main.title = title.text;
-//                        });
-//
-//                        MainService.store.get('main.body', false).then(function(body) {
-//                            main.body = body.text;
-//                        });
-//
-//                        console.log(MainService);
-//                    }, function onError(error) {
-//                        console.log('Get all data error: ', error);
-//                    });
-
-//                    MainService.getTitle().then(function onSuccess(response) {
-//                        console.log('Response from get title: ', response);
-//                        main.title = response.title;
-//                    }, function onError(error) {
-//                        console.log('titles error: ', error);
-//                    });
-//
-//                    MainService.getBody().then(function onSuccess(response) {
-//                        main.body = response.body;
-//                    }, function onError(error) {
-//                        console.log('body error: ', error);
-//                    });
+                    main.subtext = MainService.subtext('This is my subtext!');
                 }]);
-
-//        var apples = new Store('apples');
-//        var oranges = new Store('oranges');
-//
-//        //Test setting data in two different formats
-//        apples.put('red.delicious', {
-//            width: '300mm',
-//            height: '500mm'
-//        });
-//
-//        oranges.put({
-//            naval: {
-//                width: '340mm',
-//                height: '550mm'
-//            },
-//            mandarin: {
-//                width: '235mm',
-//                height: '600mm'
-//            }
-//        });
-//
-//        //Get store data
-//        console.log(apples.get());
-//        console.log(oranges.get());
-//
-//        //Remove naval property from oranges store
-//        oranges.remove('naval');
-//
-//        //Get store data
-//        console.log(apples.get('red.delicious.height'));
-//        console.log(oranges.get());
-//
-//        //Remove mandarin property from oranges store
-//        oranges.remove('mandarin');
-//
-//        //Test adding array of nested properties
-//        oranges.put(['test', 'child', 'child2', 'child3'], 'I am child 3');
-//
-//        //Get store data
-//        console.log(apples.get());
-//        console.log(oranges.get());
-//
-//        var putKey = [];
-//        var putVal = [];
-//
-//        for(var i = 0; i < 50; i++) {
-//            putKey.push(i);
-//            putVal.push({
-//                name: 'Name ' + i
-//            });
-//        }
-//
-//        //Test adding to store using two arrays to set data
-//        apples.put(putKey.join('.'), putVal);
-//        console.log(apples.get(putKey.join('.')));
-//        apples.put(putKey.slice(1), putVal.slice(1));
-//        console.log(apples.get());
-//        apples.put(putKey.join('.'), 'Super nested!');
-//
-//        apples.put(['checking.nesting', 'nice.cool.stuff', 'answer.to.the.universe'], ['Smile', { name: 'So random' }, 42]);
-//
-//        //Test saving state to local storage
-//        apples.save('AppleState');
-//        apples.put('0.1.2.3.4.5', {
-//            value: 'Overwrote further nested objects'
-//        });
-//        console.log(apples.get());
-//        apples.load('AppleState');
-//        console.log('State restored');
-//        console.log(apples.get());
-//        console.log(apples.get(putKey.join('.')));
-//        apples.clear('AppleState');
     </script>
 </body>
 </html>

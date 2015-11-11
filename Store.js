@@ -28,8 +28,15 @@
             }
         } else {
             var keys = _flattenKeys(keys);
-            _find.call(this, keys, true)[keys.slice(-1)] = value;
+            var parent = _find.call(this, keys, true);
+            var targetProperty = keys.slice(-1);
+
+            parent[targetProperty] = value;
+
+            return parent[targetProperty];
         }
+
+        return this;
     }
 
     function get(keys) {
@@ -46,6 +53,8 @@
     function remove(keys) {
         var keys = _flattenKeys(keys);
         delete _find.call(this, keys)[keys.slice(-1)];
+
+        return this;
     }
 
     function save(saveKey) {
