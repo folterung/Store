@@ -3,3 +3,7 @@
 <div>
     {{main.messages.something.somethingelse.somethingelseagain.word.text}}
 </div>
+<p ng-repeat="person in main.personData.people">
+    <span class="peep" ng-bind="person.name"></span>
+    <span class="peep" ng-bind="person.age"></span>
+</p>

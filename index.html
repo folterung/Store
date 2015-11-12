@@ -5,6 +5,19 @@
     <title>Store Test App</title>
     <link rel="stylesheet" href="bower_components/angular/angular-csp.css"/>
     <style>
+        header {
+            opacity: 0;
+        }
+
+        header.active {
+            opacity: 1;
+
+            -webkit-transition: all 0.3s ease-out;
+            -moz-transition: all 0.3s ease-out;
+            -ms-transition: all 0.3s ease-out;
+            -o-transition: all 0.3s ease-out;
+            transition: all 0.3s ease-out;
+        }
         .view-transition-container {
             position: relative;
         }
@@ -39,6 +52,32 @@
             -ms-transform: translate3d(-100px, 0, 0);
             -o-transform: translate3d(-100px, 0, 0);
             transform: translate3d(-100px, 0, 0);
+        }
+
+        .view-transition.ng-enter .peep {
+            opacity: 0;
+
+            -webkit-transition: all 0.3s ease-out;
+            -moz-transition: all 0.3s ease-out;
+            -ms-transition: all 0.3s ease-out;
+            -o-transition: all 0.3s ease-out;
+            transition: all 0.3s ease-out;
+
+            -webkit-transform: translate3d(200px, 0, 0);
+            -moz-transform: translate3d(200px, 0, 0);
+            -ms-transform: translate3d(200px, 0, 0);
+            -o-transform: translate3d(200px, 0, 0);
+            transform: translate3d(200px, 0, 0);
+        }
+
+        .view-transition.ng-enter.ng-enter-active .peep {
+            opacity: 1;
+
+            -webkit-transform: translate3d(0, 0, 0);
+            -moz-transform: translate3d(0, 0, 0);
+            -ms-transform: translate3d(0, 0, 0);
+            -o-transform: translate3d(0, 0, 0);
+            transform: translate3d(0, 0, 0);
         }
 
         .view-transition.ng-enter .title {
@@ -109,15 +148,16 @@
     <script type="text/javascript">
 
         angular.module('test.store.app', ['ngAnimate', 'ngRoute', 'store.module'])
-                .config(function($routeProvider, StoreProvider) {
+                .config(function($routeProvider) {
                     $routeProvider
                             .when('/home', {
                                 templateUrl: 'partials/home.html',
                                 controller: 'MainController',
                                 controllerAs: 'main',
                                 resolve: {
-                                    getContent: function(Content) {
-                                        return Content.get();
+                                    getContent: getContent,
+                                    getPeople: function(MainService) {
+                                        return MainService.getPeople();
                                     }
                                 }
                             })
@@ -126,12 +166,20 @@
                                 controller: 'SubController',
                                 controllerAs: 'sub',
                                 resolve: {
-                                    getContent: function(Content) {
-                                        return Content.get();
-                                    }
+                                    getContent: getContent
                                 }
                             })
                             .otherwise('/home');
+
+                    function getContent(Content) {
+                        return Content.get();
+                    }
+                })
+                .run(function($rootScope) {
+                    var initViewLoad = $rootScope.$on('$viewContentLoaded', function() {
+                        angular.element(document.querySelector('header')).addClass('active');
+                        initViewLoad();
+                    });
                 })
                 .factory('Content', function(Store) {
                     var contentStore = new Store();
@@ -154,11 +202,22 @@
                         headers: defaultHeaders,
                         store: true
                     });
+                    store.set('personData', {
+                        url: '/people.json',
+                        method: 'GET',
+                        header: defaultHeaders,
+                        store: true
+                    });
 
                     return {
                         store: store,
-                        updateTitle: updateTitle
+                        updateTitle: updateTitle,
+                        getPeople: getPeople
                     };
+
+                    function getPeople() {
+                        return store.get('personData');
+                    }
 
                     function updateTitle(idValue, preventStore) {
                         return store.get('messages.title', {
@@ -188,6 +247,8 @@
                 .controller('MainController', ['$scope', '$timeout', 'MainService', 'Content', function($scope, $timeout, MainService, Content) {
                     var main = this;
 
+                    MainService.store.bind(main);
+
                     init();
 
                     function init() {
@@ -209,13 +270,7 @@
 
                     function init() {
                         MainService.store.messages = Content.bind(sub.messages, /content.alternate/, true);
-
-                        MainService.updateTitle(1, false).then(function(response) {
-                            console.log('Response from updateTitle: ', response);
-                            console.log('mainservice: ', MainService);
-                            console.log('Content: ', Content);
-                            console.log('sub: ', sub);
-                        });
+                        MainService.updateTitle(1, false);
                     }
                 }]);
     </script>
