@@ -2,98 +2,234 @@
 <html lang="en" ng-app="test.store.app">
 <head>
     <meta charset="UTF-8">
-    <title></title>
+    <title>Store Test App</title>
+    <link rel="stylesheet" href="bower_components/angular/angular-csp.css"/>
+    <style>
+        .view-transition-container {
+            position: relative;
+        }
+
+        .view-transition {
+            -webkit-transition: all 0.3s ease-out;
+            -moz-transition: all 0.3s ease-out;
+            -ms-transition: all 0.3s ease-out;
+            -o-transition: all 0.3s ease-out;
+            transition: all 0.3s ease-out;
+        }
+
+        .title {
+            -webkit-transition: all 0.3s ease-out;
+            -moz-transition: all 0.3s ease-out;
+            -ms-transition: all 0.3s ease-out;
+            -o-transition: all 0.3s ease-out;
+            transition: all 0.3s ease-out;
+        }
+
+        .view-transition.ng-enter, .view-transition.ng-leave {
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        .view-transition.ng-enter {
+            opacity: 0;
+
+            -webkit-transform: translate3d(-100px, 0, 0);
+            -moz-transform: translate3d(-100px, 0, 0);
+            -ms-transform: translate3d(-100px, 0, 0);
+            -o-transform: translate3d(-100px, 0, 0);
+            transform: translate3d(-100px, 0, 0);
+        }
+
+        .view-transition.ng-enter .title {
+            opacity: 0;
+
+            -webkit-transform: translate3d(200px, 0, 0);
+            -moz-transform: translate3d(200px, 0, 0);
+            -ms-transform: translate3d(200px, 0, 0);
+            -o-transform: translate3d(200px, 0, 0);
+            transform: translate3d(200px, 0, 0);
+        }
+
+        .view-transition.ng-leave, .view-transition.ng-enter.ng-enter-active {
+            opacity: 1;
+
+            -webkit-transform: translate3d(0, 0, 0);
+            -moz-transform: translate3d(0, 0, 0);
+            -ms-transform: translate3d(0, 0, 0);
+            -o-transform: translate3d(0, 0, 0);
+            transform: translate3d(0, 0, 0);
+        }
+
+        .view-transition.ng-leave .title, .view-transition.ng-enter.ng-enter-active .title {
+            opacity: 1;
+
+            -webkit-transform: translate3d(0, 0, 0);
+            -moz-transform: translate3d(0, 0, 0);
+            -ms-transform: translate3d(0, 0, 0);
+            -o-transform: translate3d(0, 0, 0);
+            transform: translate3d(0, 0, 0);
+        }
+
+        .view-transition.ng-leave.ng-leave-active {
+            opacity: 0;
+
+            -webkit-transform: translate3d(100px, 0, 0);
+            -moz-transform: translate3d(100px, 0, 0);
+            -ms-transform: translate3d(100px, 0, 0);
+            -o-transform: translate3d(100px, 0, 0);
+            transform: translate3d(100px, 0, 0);
+        }
+
+        .view-transition.ng-leave.ng-leave-active .title {
+            opacity: 0;
+
+            -webkit-transform: translate3d(-200px, 0, 0);
+            -moz-transform: translate3d(-200px, 0, 0);
+            -ms-transform: translate3d(-200px, 0, 0);
+            -o-transform: translate3d(-200px, 0, 0);
+            transform: translate3d(-200px, 0, 0);
+        }
+    </style>
 </head>
-<body ng-controller="MainController as main">
-    <h1 ng-bind="main.title"></h1>
-    <p ng-bind="main.body"></p>
-    <hr/>
-    <p ng-bind="main.subtext"></p>
+<body ng-controller="MasterController as master">
+    <header ng-cloak="">
+        <button ng-click="master.go('/home');" ng-if="master.isNotView('/home');" ng-bind="master.messages.button.home.text"></button>
+        <button ng-click="master.go('/alternate');" ng-if="master.isNotView('/alternate');" ng-bind="master.messages.button.alternate.text"></button>
+    </header>
+    <div class="view-transition-container">
+        <div ng-view="" class="view-transition"></div>
+    </div>
 
     <script type="text/javascript" src="bower_components/angular/angular.min.js"></script>
+    <script type="text/javascript" src="bower_components/angular-animate/angular-animate.min.js"></script>
+    <script type="text/javascript" src="bower_components/angular-route/angular-route.min.js"></script>
     <script type="text/javascript" src="Store.js"></script>
     <script type="text/javascript" src="StoreProvider.js"></script>
     <script type="text/javascript">
 
-        angular.module('test.store.app', ['store.module'])
-                .config(function(StoreProvider) {
+        angular.module('test.store.app', ['ngAnimate', 'ngRoute', 'store.module'])
+                .config(function($routeProvider, StoreProvider) {
+                    $routeProvider
+                            .when('/home', {
+                                templateUrl: 'partials/home.html',
+                                controller: 'MainController',
+                                controllerAs: 'main',
+                                resolve: {
+                                    getContent: function(Content) {
+                                        return Content.get();
+                                    }
+                                }
+                            })
+                            .when('/alternate', {
+                                templateUrl: 'partials/alternate.html',
+                                controller: 'SubController',
+                                controllerAs: 'sub',
+                                resolve: {
+                                    getContent: function(Content) {
+                                        return Content.get();
+                                    }
+                                }
+                            })
+                            .otherwise('/home');
+                })
+                .factory('Content', function(Store) {
+                    var contentStore = new Store();
 
+                    contentStore.set({
+                        url: 'api/messages.json',
+                        store: true
+                    });
+
+                    return contentStore;
                 })
                 .factory('MainService', ['$q', 'Store', function($q, Store) {
                     var store = new Store();
-                    var defaultHeaders = {
-                        "cache-control": "no-cache"
-                    };
+                    var defaultHeaders = {};
 
                     store.setBaseUrl('api');
 
-                    store.set('title', {
+                    store.set('messages.title', {
                         url: '/title/{id}.json',
                         headers: defaultHeaders,
                         store: true
                     });
 
-                    store.set('body', {
-                        url: '/body/{id}.json',
-                        headers: defaultHeaders
-                    });
-
-                    store.set('subtext');
-
                     return {
                         store: store,
-                        getAllData: getAllData,
-                        getTitle: getTitle,
-                        getBody: getBody,
-                        updateTitle: updateTitle,
-                        subtext: subtext
+                        updateTitle: updateTitle
                     };
 
-                    function getAllData() {
-                        return $q.all([
-                            getTitle(),
-                            getBody()
-                        ]);
-                    }
-
-                    function getTitle() {
-                        return store.get('title', {
-                            id: 0
-                        });
-                    }
-
-                    function updateTitle() {
-                        return store.post('title', {
-                            name: 'Squirrel Title'
-                        }, {
-                            id: 1
-                        });
-                    }
-
-                    function getBody() {
-                        return store.get('body', {
-                            id: 'random_id'
-                        });
-                    }
-
-                    function subtext(value) {
-                        return store.put('subtext', value);
+                    function updateTitle(idValue, preventStore) {
+                        return store.get('messages.title', {
+                            id: idValue
+                        }, preventStore);
                     }
                 }])
-                .controller('MainController', ['$timeout', 'MainService', function($timeout, MainService) {
-                    var main = this;
+                .directive('slickReveal', function($timeout){
+                    return {
+                        link: function(scope, element, attributes) {
+                            attributes.$observe('trigger', function(value) {
+                                if(scope.$eval(value) === true) {
+                                    $timeout(function() {
+                                        element.addClass(attributes.slickReveal);
+                                    });
+                                }
+                            });
+                        }
+                    }
+                })
+                .controller('MasterController', ['$location', 'Content', function($location, Content) {
+                    var master = this;
 
-                    MainService.getAllData().then(function(response) {
-                        main.body = response[1].text;
-                        main.title = MainService.store.title.text;
-
-                        MainService.updateTitle().then(function() {
-                            main.title = MainService.store.title.text;
-                            console.log('MainService after update: ', MainService.store);
-                        });
+                    Content.get().then(function() {
+                        master.messages = {};
+                        Content.bind(master.messages, /content.master/, true);
                     });
 
-                    main.subtext = MainService.subtext('This is my subtext!');
+                    master.isNotView = isNotView;
+                    master.go = go;
+
+                    function go(path) {
+                        $location.path(path);
+                    }
+
+                    function isNotView(path) {
+                        return $location.path() !== path;
+                    }
+                }])
+                .controller('MainController', ['$scope', '$timeout', 'MainService', 'Content', function($scope, $timeout, MainService, Content) {
+                    var main = this;
+
+                    init();
+
+                    function init() {
+                        main.messages = {};
+
+                        Content.bind(main.messages, /content.home/, true);
+                    }
+                }])
+                .controller('SubController', ['$timeout', 'MainService', 'Content', function($timeout, MainService, Content) {
+                    var sub = this;
+
+                    sub.messages = {};
+
+                    if(!MainService.store.messages) {
+                        init();
+                    } else {
+                        sub.messages = MainService.store.messages;
+                    }
+
+                    function init() {
+                        MainService.store.messages = Content.bind(sub.messages, /content.alternate/, true);
+
+                        MainService.updateTitle(1, false).then(function(response) {
+                            console.log('Response from updateTitle: ', response);
+                            console.log('mainservice: ', MainService);
+                            console.log('Content: ', Content);
+                            console.log('sub: ', sub);
+                        });
+                    }
                 }]);
     </script>
 </body>

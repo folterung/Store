@@ -1,0 +1,10 @@
+{
+  "content.master.button.home.text": "Home",
+  "content.master.button.alternate.text": "Alternate",
+  "content.home.title.text": "Home View",
+  "content.home.body.text": "This is some random body content for the home page",
+  "content.home.something.somethingelse.somethingelseagain.word.text": "Yay! Made it to the nested word",
+  "content.alternate.title.text": "Alternate View",
+  "content.alternate.body.text": "This is some random body content for the alternate page",
+  "content.alternate.subtext": "Hurray! My subtext works!"
+}

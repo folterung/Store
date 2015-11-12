@@ -16,8 +16,8 @@
     win.Store = Store;
 
     function put(keys, value) {
-        if(value === undefined) {
-            _state.call(this, keys);
+        if(value === undefined || keys === undefined) {
+            _state.call(this, value || keys);
         } else if(_isArray(keys) && _isArray(value)) {
             if(typeof keys === 'string') {
                 keys = _flattenKeys(keys);
