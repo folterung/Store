@@ -203,7 +203,7 @@
                         store: true
                     });
                     store.set('personData', {
-                        url: '/people.json',
+                        url: '/people{id}.json',
                         method: 'GET',
                         header: defaultHeaders,
                         store: true
@@ -212,11 +212,20 @@
                     return {
                         store: store,
                         updateTitle: updateTitle,
-                        getPeople: getPeople
+                        getPeople: getPeople,
+                        updatePeople: updatePeople
                     };
 
                     function getPeople() {
-                        return store.get('personData');
+                        return store.get('personData', {
+                            id: 1
+                        });
+                    }
+
+                    function updatePeople(idValue) {
+                        return store.get('personData', {
+                            id: idValue
+                        });
                     }
 
                     function updateTitle(idValue, preventStore) {
@@ -248,6 +257,7 @@
                     var main = this;
 
                     MainService.store.bind(main);
+                    MainService.store.setBind(main);
 
                     init();
 
@@ -255,6 +265,10 @@
                         main.messages = {};
 
                         Content.bind(main.messages, /content.home/, true);
+
+                        $timeout(function() {
+                            MainService.updatePeople(2);
+                        }, 2000);
                     }
                 }])
                 .controller('SubController', ['$timeout', 'MainService', 'Content', function($timeout, MainService, Content) {
@@ -262,15 +276,10 @@
 
                     sub.messages = {};
 
-                    if(!MainService.store.messages) {
-                        init();
-                    } else {
-                        sub.messages = MainService.store.messages;
-                    }
+                    init();
 
                     function init() {
-                        MainService.store.messages = Content.bind(sub.messages, /content.alternate/, true);
-                        MainService.updateTitle(1, false);
+                        Content.bind(sub.messages, /content.alternate/, true);
                     }
                 }]);
     </script>
