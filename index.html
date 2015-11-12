@@ -171,8 +171,8 @@
                             })
                             .otherwise('/home');
 
-                    function getContent(Content) {
-                        return Content.get();
+                    function getContent(Content, Constants) {
+                        return Content.get(Constants.LOCALE);
                     }
                 })
                 .run(function($rootScope) {
@@ -181,13 +181,22 @@
                         initViewLoad();
                     });
                 })
+                .factory('Constants', function() {
+                    return {
+                        LOCALE: {
+                            locale: 'en_US'
+                        }
+                    };
+                })
                 .factory('Content', function(Store) {
                     var contentStore = new Store();
 
                     contentStore.set({
-                        url: 'api/messages.json',
+                        url: 'api/messages-{locale}.json',
                         store: true
                     });
+
+                    console.log('Content store: ', contentStore);
 
                     return contentStore;
                 })
@@ -222,10 +231,10 @@
                         });
                     }
 
-                    function updatePeople(idValue) {
+                    function updatePeople(idValue, preventUpdate) {
                         return store.get('personData', {
                             id: idValue
-                        });
+                        }, preventUpdate);
                     }
 
                     function updateTitle(idValue, preventStore) {
@@ -234,12 +243,13 @@
                         }, preventStore);
                     }
                 }])
-                .controller('MasterController', ['$location', 'Content', function($location, Content) {
+                .controller('MasterController', ['$location', 'Content', 'Constants', function($location, Content, Constants) {
                     var master = this;
 
-                    Content.get().then(function() {
+                    Content.get(Constants.LOCALE).then(function() {
                         master.messages = {};
                         Content.bind(master.messages, /content.master/, true);
+                        console.log('MasterController: ', master);
                     });
 
                     master.isNotView = isNotView;
@@ -256,7 +266,6 @@
                 .controller('MainController', ['$scope', '$timeout', 'MainService', 'Content', function($scope, $timeout, MainService, Content) {
                     var main = this;
 
-                    MainService.store.bind(main);
                     MainService.store.setBind(main);
 
                     init();
@@ -265,10 +274,12 @@
                         main.messages = {};
 
                         Content.bind(main.messages, /content.home/, true);
+                        MainService.updatePeople(1);
 
                         $timeout(function() {
                             MainService.updatePeople(2);
                         }, 2000);
+                        console.log('MainController: ', main);
                     }
                 }])
                 .controller('SubController', ['$timeout', 'MainService', 'Content', function($timeout, MainService, Content) {
@@ -280,6 +291,7 @@
 
                     function init() {
                         Content.bind(sub.messages, /content.alternate/, true);
+                        console.log('SubController: ', sub);
                     }
                 }]);
     </script>

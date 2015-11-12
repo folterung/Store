@@ -91,6 +91,11 @@
                     if(apiInfo && apiInfo.url) {
                         var defer = $q.defer();
 
+                        if(!_isString(keys)) {
+                            config = keys;
+                            keys = undefined;
+                        }
+
                         _makeRequest(apiInfo, false, config).then(function onSuccess(response) {
                             if(apiInfo.store && !preventUpdate) {
                                 put.call(context, keys, response.data);
@@ -172,8 +177,12 @@
                     return obj;
                 }
 
-                function setBind(obj) {
+                function setBind(obj, initBind, regEx, replaceMatch) {
                     bindObject = obj;
+
+                    if(initBind === true) {
+                        bind.call(this, obj, regEx, replaceMatch);
+                    }
                 }
 
                 function set(mapKey, config) {
