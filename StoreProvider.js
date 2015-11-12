@@ -33,7 +33,6 @@
                 StoreService.prototype.setBaseUrl = setBaseUrl;
                 StoreService.prototype.setBind = setBind;
                 StoreService.prototype.bind = bind;
-                StoreService.prototype.api = {};
 
                 return StoreService;
 
