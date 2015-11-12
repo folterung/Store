@@ -166,19 +166,6 @@
                         }, preventStore);
                     }
                 }])
-                .directive('slickReveal', function($timeout){
-                    return {
-                        link: function(scope, element, attributes) {
-                            attributes.$observe('trigger', function(value) {
-                                if(scope.$eval(value) === true) {
-                                    $timeout(function() {
-                                        element.addClass(attributes.slickReveal);
-                                    });
-                                }
-                            });
-                        }
-                    }
-                })
                 .controller('MasterController', ['$location', 'Content', function($location, Content) {
                     var master = this;
 
