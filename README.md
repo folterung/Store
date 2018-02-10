@@ -1,9 +1,9 @@
-##Store
+## Store
 
-####Description:
+#### Description:
 A utility for creating and maintaining the state of your client side application.
 
-####PUT:
+#### PUT:
 
     var store = new Store(); //Returns a new Store object
     store.put('data.type', 'informational'); //Stores the value 'informational' in an data.type
@@ -19,23 +19,23 @@ A utility for creating and maintaining the state of your client side application
     
     NOTE: If the path to the property doesn't exist then it will be created for you automatically
 
-####GET:
+#### GET:
 
     var store = new Store(); //Returns a new Store object
     store.get(); //Returns the store object
     store.get('data.type'); //Returns the value of the path, e.g., 'informational'
     
-####REMOVE:
+#### REMOVE:
 
     var store = new Store(); //Returns a new Store object
     store.remove('data.type'); //Removes the type property of the data object and returns the store object
     
-##StoreProvider
+## StoreProvider
 
-####Description:
+#### Description:
 A utility for AngularJS applications that automatically keeps the data returned from the server in the store so that you don't have to worry about manually keeping the client side state up-to-date.
 
-####Usage:
+#### Usage:
 
     angular.module('example.module', ['store.module'])
         .run(function(Store) {
